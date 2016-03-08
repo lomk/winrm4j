@@ -99,18 +99,40 @@ public class WinRmClient {
 
     private boolean disableCertificateChecks;
 
+    /**
+     * Create a WinRmClient builder
+     *
+     * @param endpoint - the url of the WSMAN service in the format https://machine:5986/wsman
+     */
     public static Builder builder(URL endpoint) {
         return new Builder(endpoint, AuthSchemes.NTLM);
     }
 
+    /**
+     * Create a WinRmClient builder
+     *
+     * @param endpoint - the url of the WSMAN service in the format https://machine:5986/wsman
+     */
     public static Builder builder(String endpoint) {
         return new Builder(endpoint, AuthSchemes.NTLM);
     }
 
+    /**
+     * Create a WinRmClient builder
+     *
+     * @param endpoint - the url of the WSMAN service in the format https://machine:5986/wsman
+     * @param authenticationScheme - one of Basic, NTLM, Kerberos. Default is NTLM (with Negotiate).
+     */
     public static Builder builder(URL endpoint, String authenticationScheme) {
         return new Builder(endpoint, authenticationScheme);
     }
 
+    /**
+     * Create a WinRmClient builder
+     *
+     * @param endpoint - the url of the WSMAN service in the format https://machine:5986/wsman
+     * @param authenticationScheme - one of Basic, NTLM, Kerberos. Default is NTLM (with Negotiate).
+     */
     public static Builder builder(String endpoint, String authenticationScheme) {
         return new Builder(endpoint, authenticationScheme);
     }
@@ -119,17 +141,23 @@ public class WinRmClient {
         private static final java.util.Locale DEFAULT_LOCALE = java.util.Locale.US;
         public static final Long DEFAULT_OPERATION_TIMEOUT = 60l * 1000l;
         private WinRmClient client;
-        public Builder(URL endpoint, String authenticationScheme) {
+        protected Builder(URL endpoint, String authenticationScheme) {
             client = new WinRmClient(endpoint, authenticationScheme);
         }
-        public Builder(String endpoint, String authenticationScheme) {
+        protected Builder(String endpoint, String authenticationScheme) {
             this(toUrlUnchecked(checkNotNull(endpoint, "endpoint")), authenticationScheme);
         }
+        /**
+         * Credentials to use for authentication
+         */
         public Builder credentials(String username, String password) {
             client.username = checkNotNull(username, "username");
             client.password = checkNotNull(password, "password");
             return this;
         }
+        /**
+         * @param locale The locale to run the process in
+         */
         public Builder locale(java.util.Locale locale) {
             Locale l = new Locale();
             l.setLang(checkNotNull(locale, "locale").toLanguageTag());
@@ -149,19 +177,35 @@ public class WinRmClient {
             client.receiveTimeout = operationTimeout + 30l * 1000l;
             return this;
         }
+
+        /**
+         * @param disableCertificateChecks Skip trusted certificate and domain (CN) checks.
+         *        Used when working with self-signed certificates.
+         */
         public Builder disableCertificateChecks(boolean disableCertificateChecks) {
             client.disableCertificateChecks = disableCertificateChecks;
             return this;
         }
+
+        /**
+         * @param workingDirectory the working directory of the process
+         */
         public Builder workingDirectory(String workingDirectory) {
             client.workingDirectory = checkNotNull(workingDirectory, "workingDirectory");
             return this;
         }
+
+        /**
+         * @param environment variables to pass to the command
+         */
         public Builder environment(Map<String, String> environment) {
             client.environment = checkNotNull(environment, "environment");
             return this;
         }
 
+        /**
+         * Create a WinRmClient
+         */
         public WinRmClient build() {
             if (client.locale == null) {
                 locale(DEFAULT_LOCALE);

@@ -16,7 +16,7 @@ public class CustomizedWinRmToolTest extends AbstractWinRmToolLiveTest {
     protected final Callable<WinRmTool.Builder> INIT_CUSTOMIZED_WINRM_TOOL = new Callable<WinRmTool.Builder>() {
         @Override
         public WinRmTool.Builder call() throws Exception {
-            final WinRmTool.Builder winRmToolBuilder = WinRmTool.Builder.builder(VM_HOST, VM_USER, VM_PASSWORD);
+            final WinRmTool.Builder winRmToolBuilder = WinRmTool.builder(VM_HOST, VM_USER, VM_PASSWORD);
             winRmToolBuilder.setAuthenticationScheme(AuthSchemes.NTLM);
             winRmToolBuilder.port(VM_PORT);
             winRmToolBuilder.useHttps(false);

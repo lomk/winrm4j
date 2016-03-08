@@ -49,7 +49,7 @@ public class AbstractWinRmToolLiveTest {
     Callable<WinRmTool> WINRM_TOOL = new Callable<WinRmTool>() {
         @Override public WinRmTool call() throws Exception {
 //            return WinRmTool.connect(VM_HOST + ":" + VM_PORT, VM_USER, VM_PASSWORD);
-            WinRmTool.Builder builder = WinRmTool.Builder.builder(VM_HOST, VM_USER, VM_PASSWORD);
+            WinRmTool.Builder builder = WinRmTool.builder(VM_HOST, VM_USER, VM_PASSWORD);
             builder.setAuthenticationScheme(AuthSchemes.NTLM);
             builder.port(VM_PORT);
             builder.useHttps(true);

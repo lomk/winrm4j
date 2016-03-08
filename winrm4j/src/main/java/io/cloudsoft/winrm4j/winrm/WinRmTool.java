@@ -32,6 +32,20 @@ public class WinRmTool {
     private final String workingDirectory;
     private final Map<String, String> environment;
 
+    /**
+     * Create a WinRmClient builder
+     *
+     * @param address - can be the host name of the machine to connect to,
+     *          a hostname:port pair, or a full url https://hostname:port/wsman. When
+     *          no protocol is specified the {@link Builder#useHttps(boolean)} method
+     *          can be used to change the default (https).
+     * @param username - user name to authenticate with
+     * @param password - password to authenticate with
+     */
+    public static Builder builder(String address, String username, String password) {
+        return new Builder(address, username, password);
+    }
+
     public static class Builder {
         private String authenticationScheme = AuthSchemes.NTLM;
         private Boolean useHttps;
@@ -45,6 +59,8 @@ public class WinRmTool {
 
         private static final Pattern matchPort = Pattern.compile(".*:(\\d+)$");
 
+        /** @deprecated since 0.3.0 in favor of {@link WinRmTool#builder} */
+        @Deprecated
         public static Builder builder(String address, String username, String password) {
             return new Builder(address, username, password);
         }
@@ -55,25 +71,43 @@ public class WinRmTool {
             this.password = password;
         }
 
+        /**
+         * @param workingDirectory the working directory of the process
+         */
         public Builder workingDirectory(String workingDirectory) {
             this.workingDirectory = WinRmClient.checkNotNull(workingDirectory, "workingDirectory");
             return this;
         }
+
+        /**
+         * @param environment variables to pass to the command
+         */
         public Builder environment(Map<String, String> environment) {
             this.environment = WinRmClient.checkNotNull(environment, "environment");
             return this;
         }
 
+        /**
+         * @param authenticationScheme - one of Basic, NTLM, Kerberos. Default is NTLM (with Negotiate).
+         */
         public Builder setAuthenticationScheme(String authenticationScheme) {
             this.authenticationScheme = authenticationScheme;
             return this;
         }
 
+        /**
+         * @param disableCertificateChecks Skip trusted certificate and domain (CN) checks.
+         *        Used when working with self-signed certificates.
+         */
         public Builder disableCertificateChecks(boolean disableCertificateChecks) {
             this.disableCertificateChecks = disableCertificateChecks;
             return this;
         }
 
+        /**
+         * Selects http vs https protocols to connect to the server if none is specified
+         * explicitly in the address passed in the constructor. Default is https.
+         */
         public Builder useHttps(boolean useHttps) {
             this.useHttps = useHttps;
             return this;
@@ -120,6 +154,7 @@ public class WinRmTool {
         }
     }
 
+    /** @deprecated since 0.3.0 Use {@link Builder} instead */
     @Deprecated
     public static WinRmTool connect(String address, String username, String password) {
         return new WinRmTool(WinRmTool.Builder.getEndpointUrl(address, false, DEFAULT_WINRM_PORT), username, password, AuthSchemes.NTLM, false, null, null);

@@ -10,10 +10,6 @@ If you wish to build the binaries yourself, you can clone this project, and buil
 
 `mvn clean install`
 
-To build using the Apache CXF project tools use
-
-`mvn clean install -Djax-ws-cxf`
-
 
 ### Maven dependency
 
@@ -33,7 +29,10 @@ To use winrm4j in Java code, you first create a `WinRmTool` object via the stati
 `executeScript` and `executePs`, which can be used to execute batch or PowerShell statements respectively.
 
 ``` java
-WinRMTool winrm = WinRmTool.connect("my.windows.server.com", "Administrator", "pa55w0rd!");
+WinRmTool winrm = WinRmTool.builder("my.windows.server.com", "Administrator", "pa55w0rd!")
+        .disableCertificateChecks(true)
+        .setAuthenticationScheme(AuthSchemes.NTLM)
+        .build();
 
 WinRmToolResponse response = winrm.executeScript(ImmutableList.of("dir C:\\"));
 System.out.println(response.getStdOut());
