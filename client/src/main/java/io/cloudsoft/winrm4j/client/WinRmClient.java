@@ -112,6 +112,7 @@ public class WinRmClient {
     private Integer retriesForConnectionFailures;
     private Map<String, String> environment;
 
+    private Bus bus;
     private WinRm winrm;
     private String shellId;
     private SelectorSetType shellSelector;
@@ -234,10 +235,10 @@ public class WinRmClient {
         this.authenticationScheme = authenticationScheme != null ? authenticationScheme : AuthSchemes.NTLM;
         this.endpoint = endpoint;
 
+        bus = BusFactory.newInstance().createBus();
         if (!this.authenticationScheme.equals(AuthSchemes.BASIC)) {
             // TODO consider using async client for Basic authentication
             // Needed to be async according to http://cxf.apache.org/docs/asynchronous-client-http-transport.html
-            Bus bus = BusFactory.getDefaultBus();
             bus.getProperties().put(AsyncHTTPConduit.USE_ASYNC, Boolean.TRUE);
             bus.getProperties().put(AsyncHTTPConduitFactory.USE_POLICY, "ALWAYS");
         }
@@ -420,7 +421,15 @@ public class WinRmClient {
         if (winrm != null) {
             return winrm;
         } else {
-            return createService();
+            Bus prevBus = BusFactory.getAndSetThreadDefaultBus(bus);
+            try {
+                // The default thread bus is set on the ClientImpl and used for further requests
+                return createService();
+            } finally {
+                if (BusFactory.getThreadDefaultBus(false) != prevBus) {
+                    BusFactory.setThreadDefaultBus(prevBus);
+                }
+            }
         }
     }
 
@@ -494,6 +503,7 @@ public class WinRmClient {
     }
 
     //  sys prop approach
+    @SuppressWarnings("unused")
     private void doCreateServiceWithSystemPropertySet() {
         System.setProperty("javax.xml.ws.spi.Provider", ProviderImpl.class.getName());
         doCreateServiceNormal();
@@ -532,7 +542,8 @@ public class WinRmClient {
         factory.getClientFactoryBean().getServiceFactory().setWsdlURL(WinRmService.WSDL_LOCATION);
         factory.setServiceName(WinRmService.SERVICE);
         factory.setEndpointName(WinRmService.WinRmPort);
-        factory.setFeatures(Arrays.asList((Feature)newMemberSubmissionAddressingFeature()));        
+        factory.setFeatures(Arrays.asList((Feature)newMemberSubmissionAddressingFeature()));
+        factory.setBus(bus);
         winrm = factory.create(WinRm.class);
         
         return ClientProxy.getClient(winrm);
@@ -541,6 +552,7 @@ public class WinRmClient {
     
     // approach using CCL
 
+    @SuppressWarnings("unused")
     private synchronized void doCreateServiceInSpecialClassLoader(ClassLoader cl) {
         
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -681,7 +693,7 @@ public class WinRmClient {
         optSetCreate.getOption().add(optCodepage);
 
         final Holder<Shell> holder = new Holder<>(shell);
-        ResourceCreated resourceCreated = winrmCallRetryConnFailure(new CallableFunction<ResourceCreated>() {
+        winrmCallRetryConnFailure(new CallableFunction<ResourceCreated>() {
             @Override
             public ResourceCreated call() {
                 //TODO use different instances of service http://cxf.apache.org/docs/developing-a-consumer.html#DevelopingaConsumer-SettingConnectionPropertieswithContexts
@@ -736,6 +748,9 @@ public class WinRmClient {
             } catch (SOAPFaultException soapFault) {
                 assertFaultCode(soapFault, WSMAN_FAULT_CODE_SHELL_WAS_NOT_FOUND);
             }
+        }
+        if (bus != null) {
+            bus.shutdown(true);
         }
     }
 
